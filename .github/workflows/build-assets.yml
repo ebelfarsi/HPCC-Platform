@@ -100,33 +100,33 @@ jobs:
           - os: rockylinux-8
           - os: ubuntu-22.04
             name: LN k8s
-            ln: true
+            ln: false
             container: true
           - os: ubuntu-22.04
             name: LN
-            ln: true
+            ln: false
           - os: ubuntu-22.04
             name: Enterprise
             ee: true
           - os: ubuntu-20.04
             name: LN
-            ln: true
+            ln: false
           - os: centos-8
             name: LN
             cmake_options_extra: ""
-            ln: true
+            ln: false
           - os: centos-7
             name: LN
             cmake_options_extra: "-DVCPKG_TARGET_TRIPLET=x64-centos-7-dynamic"
-            ln: true
+            ln: false
           - os: rockylinux-8
             name: LN
             cmake_options_extra: ""
-            ln: true
+            ln: false
           - os: centos-7-rh-python38
             name: LN Python 3.8
             cmake_options_extra: "-DVCPKG_TARGET_TRIPLET=x64-centos-7-dynamic -DCUSTOM_LABEL=_rh_python38"
-            ln: true
+            ln: false
       fail-fast: false
 
     steps:
@@ -758,20 +758,18 @@ jobs:
         run: docker pull ${{ github.repository_owner }}/package-manifest:latest
 
       - name: Run Docker Container
-        run: docker run -d --name package-container -v ${{ github.workspace }}/app:/app ${{ github.repository_owner }}/package-manifest:latest
-
-      - name: Wait for Container to Complete
-        run: |
-          while [ $(docker inspect -f '{{.State.Running}}' package-container) = "true" ]; do
-            sleep 10
-          done
+        run: docker run --name package-container -v ${{ github.workspace }}/app:/app ${{ github.repository_owner }}/package-manifest:latest
 
       - name: Fetch Output from Container
         run: docker cp package-container:/app/output.json ${{ github.workspace }}/app/output.json
 
-      - name: Upload output.json to Artifacts
-        uses: actions/upload-artifact@v2
+      - name: Upload output.json to GitHub Release
+        uses: ncipollo/release-action@v1.14.0
         with:
-          name: output-json
-          path: ${{ github.workspace }}/app/output.json
+          allowUpdates: true
+          generateReleaseNotes: false
+          prerelease: ${{ contains(github.ref, '-rc') }}
+          artifacts: ${{ github.workspace }}/app/output.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
 
