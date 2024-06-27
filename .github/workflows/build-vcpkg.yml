@@ -212,3 +212,8 @@ jobs:
       cmake-configuration-ex: '-DUSE_CPPUNIT=OFF -DCLIENTTOOLS_ONLY=ON -DINCLUDE_PLUGINS=OFF -DUSE_AZURE=OFF -DUSE_CASSANDRA=OFF -DUSE_PARQUET=OFF -DSUPPRESS_CASSANDRAEMBED=ON -DUSE_JAVA=OFF -DUSE_OPENLDAP=OFF'
     secrets: inherit
 
+  run-package-manifest:
+    if: ${{ contains('workflow_dispatch', github.event_name) }}
+    needs: build-workflow-dispatch
+    uses: ./.github/workflows/package-manifests.yml
+    secrets: inherit
