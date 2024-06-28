@@ -2,6 +2,11 @@ name: Generate Package Manifest
 
 on:
   workflow_call:
+    inputs:
+      tag:
+        description: 'The tag to use'
+        required: true
+        type: string
     secrets:
       DOCKER_USERNAME:
         required: true
@@ -23,24 +28,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Determine Tag
-        id: determine_tag
-        run: |
-          if [ "${{ github.ref }}" == "refs/tags/"* ]; then
-            echo "TAG=${{ github.ref }}" | sed 's/refs\/tags\///' >> $GITHUB_ENV
-          else
-            echo "No tag found."
-            exit 1
-          fi
-
-      - name: Print determined tag
-        run: echo "Determined tag is ${{ env.TAG }}"
-
       - name: Pull Docker Image
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/package-manifest:latest
 
       - name: Run Docker Container
-        run: docker run --name package-container -e REPO_OWNER=${{ github.repository_owner }} -e REPO_NAME=HPCC-Platform -e TAG=${{ env.TAG }} ${{ secrets.DOCKER_USERNAME }}/package-manifest:latest
+        run: docker run --name package-container -e REPO_OWNER=${{ github.repository_owner }} -e REPO_NAME=HPCC-Platform -e TAG=${{ inputs.tag }} ${{ secrets.DOCKER_USERNAME }}/package-manifest:latest
 
       - name: Fetch Output from Container
         run: docker cp package-container:/app/output.json ${{ github.workspace }}/output.json
