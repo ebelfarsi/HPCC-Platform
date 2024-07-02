@@ -29,7 +29,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Pull Docker Image
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/package-manifest:latest
+        run: docker pull ebelfarsi/package-manifest:latest
 
       - name: Run Docker Container
         run: docker run --name package-container -e REPO_OWNER=${{ github.repository_owner }} -e REPO_NAME=HPCC-Platform -e TAG=${{ inputs.tag }} -e GIT_TKN=${{ secrets.LNB_TOKEN }} ebelfarsi/package-manifest:latest
