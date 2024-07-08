@@ -14,6 +14,12 @@ on:
         required: true
       LNB_TOKEN:
         required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to use'
+        required: true
+        type: string
 
 jobs:
   run-package-manifest:
@@ -21,6 +27,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -32,10 +45,18 @@ jobs:
         run: docker pull ebelfarsi/package-manifest:latest
 
       - name: Run Docker Container
-        run: docker run --name package-container -e REPO_OWNER=${{ github.repository_owner }} -e REPO_NAME=HPCC-Platform -e TAG=${{ inputs.tag }} -e GIT_TKN=${{ secrets.LNB_TOKEN }} ebelfarsi/package-manifest:latest
+        run: docker run --name package-container -e REPO_OWNER=${{ github.repository_owner }} -e REPO_NAME=HPCC-Platform -e TAG=${{ github.event.inputs.tag }} -e GIT_TKN=${{ secrets.LNB_TOKEN }} ebelfarsi/package-manifest:latest
 
       - name: Fetch Output from Container
         run: docker cp package-container:/app/output.json ${{ github.workspace }}/output.json
+
+      - name: Prepare Directory Structure
+        run: |
+          mkdir -p ${{ github.workspace }}/bin
+          mv ${{ github.workspace }}/output.json ${{ github.workspace }}/bin/output.json
+
+      - name: Sync bin Directory to S3 Bucket
+        run: aws s3 sync ${{ github.workspace }}/bin s3://ebelfarsi-bucket/
 
       - name: Upload output.json to GitHub Release
         uses: ncipollo/release-action@v1.14.0
@@ -43,5 +64,5 @@ jobs:
           allowUpdates: true
           generateReleaseNotes: false
           prerelease: ${{ contains(github.ref, '-rc') }}
-          artifacts: ${{ github.workspace }}/output.json
+          artifacts: ${{ github.workspace }}/bin/output.json
           token: ${{ secrets.LNB_TOKEN }}
