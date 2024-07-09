@@ -425,7 +425,7 @@ jobs:
           path: ${{ needs.preamble.outputs.folder_build }}/**/*.log
 
   run-package-manifest:
-    needs: [ preamble, build-docker ]
+
     uses: ./.github/workflows/package-manifests.yml
     with:
       tag: ${{ needs.preamble.outputs.community_tag }}
