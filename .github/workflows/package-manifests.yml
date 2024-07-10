@@ -52,11 +52,18 @@ jobs:
 
       - name: Prepare Directory Structure
         run: |
-          mkdir -p ${{ github.workspace }}/bin
-          mv ${{ github.workspace }}/output.json ${{ github.workspace }}/bin/output.json
+          version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
+          base_dir="${{ github.workspace }}/CE-Candidate-${version}"
+          mkdir -p "$base_dir"
+          jq -r '.[] | .Edge_Cast_path' ${{ github.workspace }}/output.json | while read path; do
+            full_path="$base_dir/$(echo $path | sed 's#releases/CE-Candidate-[^/]*##')"
+            mkdir -p "$(dirname "$full_path")"
+            touch "$full_path"
+          done
 
-      - name: Sync bin Directory to S3 Bucket
-        run: aws s3 sync ${{ github.workspace }}/bin s3://ebelfarsi-bucket/
+      - name: Sync Directory to S3 Bucket
+        run: aws s3 sync $base_dir s3://ebelfarsi-bucket/
+
 
       - name: Upload output.json to GitHub Release
         uses: ncipollo/release-action@v1.14.0
