@@ -52,14 +52,26 @@ jobs:
 
       - name: Prepare Directory Structure
         run: |
-          mkdir -p ${{ github.workspace }}/bin
-          mv ${{ github.workspace }}/output.json ${{ github.workspace }}/bin/output.json
-
-      - name: Sync bin Directory to S3 Bucket
-        run:
           version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
           base_dir="${{ github.workspace }}/CE-Candidate-${version}"
-          aws s3 sync ${{ github.workspace }}/bin s3://ebelfarsi-bucket/
+          mkdir -p "$base_dir"
+          jq -r '.[] | .Edge_Cast_path' ${{ github.workspace }}/output.json | while read path; do
+            full_path="$base_dir/$(echo $path | sed 's#releases/CE-Candidate-[^/]*##')"
+            mkdir -p "$(dirname "$full_path")"
+            touch "$full_path"
+          done
+
+      - name: Sync Directory to S3 Bucket
+        run: |
+          version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
+          base_dir="${{ github.workspace }}/CE-Candidate-${version}"
+          aws s3 sync "$base_dir" s3://your-bucket-name/
+        env:
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
 
       - name: Upload output.json to GitHub Release
         uses: ncipollo/release-action@v1.14.0
