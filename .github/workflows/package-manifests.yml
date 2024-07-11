@@ -50,10 +50,9 @@ jobs:
       - name: Fetch Output from Container and Upload to S3
         run: |
           docker cp package-container:/app/output.json ${{ github.workspace }}/output.json
-          aws s3 cp ${{ github.workspace }}/output.json s3://your-bucket-name/output.json
+          aws s3 cp ${{ github.workspace }}/output.json s3://ebelfarsi-bucket/output.json
 
       - name: Prepare Directory Structure
-        shell: bash
         run: |
           version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
           base_dir="${{ github.workspace }}/CE-Candidate-${version}"
