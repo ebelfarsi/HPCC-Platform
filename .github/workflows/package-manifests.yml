@@ -52,23 +52,25 @@ jobs:
 
       - name: Prepare Directory Structure
         run: |
-          version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
+          output_json_path="${{ github.workspace }}/output.json"
+          version=$(jq -r '.[0].Version' "$output_json_path" | cut -d'-' -f1)
           base_dir="${{ github.workspace }}/CE-Candidate-${version}"
           mkdir -p "$base_dir"
-          jq -r '.[] | .Edge_Cast_path' ${{ github.workspace }}/output.json | while read path; do
+          jq -r '.[] | .Edge_Cast_path' "$output_json_path" | while read path; do
             full_path="$base_dir/$(echo $path | sed 's#releases/CE-Candidate-[^/]*##')"
             mkdir -p "$(dirname "$full_path")"
             touch "$full_path"
           done
-          mv ${{ github.workspace }}/output.json "$base_dir/output.json"
+          mv "$output_json_path" "$base_dir/output.json"
 
       - name: Sync Directory to S3 Bucket
         shell: bash
         run: |
-          version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
+          output_json_path="${{ github.workspace }}/output.json"
+          version=$(jq -r '.[0].Version' "$output_json_path" | cut -d'-' -f1)
           base_dir="${{ github.workspace }}/CE-Candidate-${version}"
           aws s3 sync "$base_dir" s3://ebelfarsi-bucket/
-        
+
 
 
       - name: Upload output.json to GitHub Release
