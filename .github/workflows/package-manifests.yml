@@ -47,31 +47,29 @@ jobs:
       - name: Run Docker Container
         run: docker run --name package-container -e REPO_OWNER=hpcc-systems -e REPO_NAME=HPCC-Platform -e TAG=community_9.8.2-1 -e GIT_TKN=${{ secrets.LNB_TOKEN }} ebelfarsi/package-manifest:latest
 
-      - name: Fetch Output from Container
-        run: docker cp package-container:/app/output.json ${{ github.workspace }}/output.json
+      - name: Fetch Output from Container and Upload to S3
+        run: |
+          docker cp package-container:/app/output.json ${{ github.workspace }}/output.json
+          aws s3 cp ${{ github.workspace }}/output.json s3://your-bucket-name/output.json
 
       - name: Prepare Directory Structure
+        shell: bash
         run: |
-          output_json_path="${{ github.workspace }}/output.json"
-          version=$(jq -r '.[0].Version' "$output_json_path" | cut -d'-' -f1)
+          version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
           base_dir="${{ github.workspace }}/CE-Candidate-${version}"
           mkdir -p "$base_dir"
-          jq -r '.[] | .Edge_Cast_path' "$output_json_path" | while read path; do
+          jq -r '.[] | .Edge_Cast_path' ${{ github.workspace }}/output.json | while read path; do
             full_path="$base_dir/$(echo $path | sed 's#releases/CE-Candidate-[^/]*##')"
             mkdir -p "$(dirname "$full_path")"
             touch "$full_path"
           done
-          mv "$output_json_path" "$base_dir/output.json"
 
       - name: Sync Directory to S3 Bucket
         shell: bash
         run: |
-          output_json_path="${{ github.workspace }}/output.json"
-          version=$(jq -r '.[0].Version' "$output_json_path" | cut -d'-' -f1)
+          version=$(jq -r '.[0].Version' ${{ github.workspace }}/output.json | cut -d'-' -f1)
           base_dir="${{ github.workspace }}/CE-Candidate-${version}"
           aws s3 sync "$base_dir" s3://ebelfarsi-bucket/
-
-
 
       - name: Upload output.json to GitHub Release
         uses: ncipollo/release-action@v1.14.0
