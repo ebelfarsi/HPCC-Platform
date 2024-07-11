@@ -60,6 +60,7 @@ jobs:
             mkdir -p "$(dirname "$full_path")"
             touch "$full_path"
           done
+          mv ${{ github.workspace }}/output.json "$base_dir/output.json"
 
       - name: Sync Directory to S3 Bucket
         shell: bash
