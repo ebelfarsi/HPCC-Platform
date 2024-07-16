@@ -227,23 +227,19 @@ jobs:
             ${{ needs.preamble.outputs.folder_build }}/docs/PT_BR/HTMLHelp/*.zip
           compression-level: 0
 
-      - name: Upload Assets (community)
-        if: ${{ !matrix.ln && !matrix.ee }}
-        uses: ncipollo/release-action@v1.14.0
+      - name: Upload Build Assets as Artifacts
+        uses: actions/upload-artifact@v2
         with:
           name: build-assets
-          allowUpdates: true
-          generateReleaseNotes: false
-          prerelease: ${{ contains(github.ref, '-rc') }}
-          artifacts: |
-            ${{ needs.preamble.outputs.folder_build }}/*.deb,
-            ${{ needs.preamble.outputs.folder_build }}/*.rpm,
-            ${{ needs.preamble.outputs.folder_build }}/Release/docs/*.zip,
-            ${{ needs.preamble.outputs.folder_build }}/Release/docs/EN_US/*.zip,
-            ${{ needs.preamble.outputs.folder_build }}/Release/docs/PT_BR/*.zip,
-            ${{ needs.preamble.outputs.folder_build }}/docs/EN_US/EclipseHelp/*.zip,
-            ${{ needs.preamble.outputs.folder_build }}/docs/EN_US/HTMLHelp/*.zip,
-            ${{ needs.preamble.outputs.folder_build }}/docs/PT_BR/HTMLHelp/*.zip,
+          path: |
+            ${{ needs.preamble.outputs.folder_build }}/*.deb
+            ${{ needs.preamble.outputs.folder_build }}/*.rpm
+            ${{ needs.preamble.outputs.folder_build }}/Release/docs/*.zip
+            ${{ needs.preamble.outputs.folder_build }}/Release/docs/EN_US/*.zip
+            ${{ needs.preamble.outputs.folder_build }}/Release/docs/PT_BR/*.zip
+            ${{ needs.preamble.outputs.folder_build }}/docs/EN_US/EclipseHelp/*.zip
+            ${{ needs.preamble.outputs.folder_build }}/docs/EN_US/HTMLHelp/*.zip
+            ${{ needs.preamble.outputs.folder_build }}/docs/PT_BR/HTMLHelp/*.zip
             ${{ needs.preamble.outputs.folder_build }}/*.md5sum
 
       - name: Locate k8s deb file (community)

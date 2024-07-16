@@ -57,7 +57,7 @@ jobs:
       - name: Download Build Assets
         uses: actions/download-artifact@v2
         with:
-          name: build-assets  # This should match the artifact name uploaded by build-assets.yml
+          name: build-assets
           path: ${{ github.workspace }}/build-assets
 
       - name: Prepare Directory Structure and Copy Real Files
