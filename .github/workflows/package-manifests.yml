@@ -60,16 +60,19 @@ jobs:
           name: build-assets
           path: ${{ github.workspace }}/build-assets
 
-      - name: Prepare Directory Structure and Copy Real Files
+      - name: Upload Downloaded Assets to S3 Bucket
+        run: |
+          aws s3 sync ${{ github.workspace }}/build-assets s3://ebelfarsi-bucket/build-assets/
+
+      - name: Fetch Output from Container and Upload to S3
+        run: |
+          docker cp package-container:/app/output.json ${{ github.workspace }}/output.json
+          aws s3 cp ${{ github.workspace }}/output.json s3://ebelfarsi-bucket/releases/output.json
+
+      - name: Prepare Directory Structure
         shell: bash
         run: |
           output_json_path="${{ github.workspace }}/output.json"
-
-          # Ensure the output JSON file exists
-          if [ ! -f "$output_json_path" ]; then
-            echo "Error: output.json not found."
-            exit 1
-          fi
 
           # Extract version number from the first entry
           version=$(jq -r '.[0].Version' "$output_json_path")
@@ -78,28 +81,20 @@ jobs:
           # Create base directory if it doesn't exist
           mkdir -p "$base_dir"
 
-          # Parse JSON and create directory structure with actual assets
-          jq -c '.[]' "$output_json_path" | while read -r item; do
-            edge_cast_path=$(echo "$item" | jq -r '.Edge_Cast_Path')
-            asset_name=$(basename "$edge_cast_path")
-            # Construct full path for the asset based on JSON
-            full_path="${base_dir}/${edge_cast_path}"
+          # Parse JSON and create directory structure
+          jq -r '.[] | .Edge_Cast_Path' "$output_json_path" | while read path; do
+            full_path="${{ github.workspace }}/$path"
             mkdir -p "$(dirname "$full_path")"
-
-            # Check if the asset file exists and copy it to the designated path
-            if [ -f "${{ github.workspace }}/build-assets/${asset_name}" ]; then
-              cp "${{ github.workspace }}/build-assets/${asset_name}" "$full_path"
-            else
-              echo "Asset ${asset_name} not found, skipping..."
-            fi
+            touch "$full_path"
           done
 
       - name: Sync Directory to S3 Bucket
         shell: bash
         run: |
-          # Sync the newly created directory structure with the S3 bucket
+          output_json_path="${{ github.workspace }}/output.json"
+          version=$(jq -r '.[0].Version' "$output_json_path")
+          base_dir="${{ github.workspace }}/releases/CE-Candidate-${version}"
           aws s3 sync "$base_dir" s3://ebelfarsi-bucket/releases/CE-Candidate-${version}
-      
 
       - name: Upload output.json to GitHub Release
         uses: ncipollo/release-action@v1.14.0
