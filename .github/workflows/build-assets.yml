@@ -231,6 +231,7 @@ jobs:
         if: ${{ !matrix.ln && !matrix.ee }}
         uses: ncipollo/release-action@v1.14.0
         with:
+          name: build-assets
           allowUpdates: true
           generateReleaseNotes: false
           prerelease: ${{ contains(github.ref, '-rc') }}
