@@ -65,6 +65,12 @@ jobs:
         run: |
           output_json_path="${{ github.workspace }}/output.json"
 
+          # Ensure the output JSON file exists
+          if [ ! -f "$output_json_path" ]; then
+            echo "Error: output.json not found."
+            exit 1
+          fi
+
           # Extract version number from the first entry
           version=$(jq -r '.[0].Version' "$output_json_path")
           base_dir="${{ github.workspace }}/releases/CE-Candidate-${version}"
@@ -79,7 +85,8 @@ jobs:
             # Construct full path for the asset based on JSON
             full_path="${base_dir}/${edge_cast_path}"
             mkdir -p "$(dirname "$full_path")"
-            # Assuming asset files are directly under build-assets and match the names exactly as needed
+
+            # Check if the asset file exists and copy it to the designated path
             if [ -f "${{ github.workspace }}/build-assets/${asset_name}" ]; then
               cp "${{ github.workspace }}/build-assets/${asset_name}" "$full_path"
             else
@@ -90,8 +97,8 @@ jobs:
       - name: Sync Directory to S3 Bucket
         shell: bash
         run: |
+          # Sync the newly created directory structure with the S3 bucket
           aws s3 sync "$base_dir" s3://ebelfarsi-bucket/releases/CE-Candidate-${version}
-      
       
 
       - name: Upload output.json to GitHub Release
