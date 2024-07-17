@@ -46,7 +46,7 @@ jobs:
         run: docker pull ebelfarsi/package-manifest:latest
 
       - name: Run Docker Container
-        run: docker run --name package-container -e REPO_OWNER=hpcc-systems -e REPO_NAME=HPCC-Platform -e TAG=${{ inputs.tag }}   -e GIT_TKN=${{ secrets.LNB_TOKEN }} ebelfarsi/package-manifest:latest
+        run: docker run --name package-container -e REPO_OWNER=hpcc-systems -e REPO_NAME=HPCC-Platform -e TAG=community_9.8.4-1   -e GIT_TKN=${{ secrets.LNB_TOKEN }} ebelfarsi/package-manifest:latest
 
 
       - name: Fetch Output from Container and Upload to S3
