@@ -84,7 +84,7 @@ jobs:
             file_name=$(basename "$edge_cast_path")
 
             # Construct the download URL and download the file
-            download_url="https://github.com/ebelfarsi/HPCC-Platform/releases/download/${{ inputs.tag }}/$file_name"
+            download_url="https://github.com/hpcc-systems/HPCC-Platform/releases/download/community_9.8.4-1/$file_name"
             wget "$download_url" -O "$full_path"
             echo "Downloaded $file_name to $full_path"
           done
