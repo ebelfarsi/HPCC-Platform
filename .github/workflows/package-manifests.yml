@@ -87,7 +87,16 @@ jobs:
             download_url="https://github.com/hpcc-systems/HPCC-Platform/releases/download/community_9.8.4-1/$file_name"
             wget "$download_url" -O "$full_path"
             echo "Downloaded $file_name to $full_path"
+
+            # Check if the downloaded file is a zip file
+            if [[ "$file_name" == *.zip ]]; then
+              unzip "$full_path" -d "$(dirname "$full_path")"
+              echo "Unzipped $file_name in $(dirname "$full_path")"
+              rm "$full_path"
+              echo "Removed the zip file $file_name"
+            fi
           done
+      
       
 
       - name: Sync Directory to S3 Bucket
