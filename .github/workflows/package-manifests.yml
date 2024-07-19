@@ -105,7 +105,7 @@ jobs:
           output_json_path="${{ github.workspace }}/output.json"
           version=$(jq -r '.[0].Version' "$output_json_path")
           base_dir="${{ github.workspace }}/releases/CE-Candidate-${version}"
-          aws s3 sync "$base_dir" s3://ebelfarsi-bucket/releases/CE-Candidate-${version}
+          aws s3 sync "$base_dir" s3://ebelfarsi-bucket/
 
       - name: Upload output.json to GitHub Release
         uses: ncipollo/release-action@v1.14.0
